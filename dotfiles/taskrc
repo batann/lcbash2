@@ -1,0 +1,101 @@
+#{{{ >>> .taskrc
+# [Created by task 2.5.3 3/25/2023 04:11:59]
+# Taskwarrior program configuration file.
+# For more documentation, see http://taskwarrior.org or try 'man task', 'man task-color',
+# 'man task-sync' or 'man taskrc'
+
+# Here is an example of entries that use the default, override and blank values
+#   variable=foo   -- By specifying a value, this overrides the default
+#   variable=      -- By specifying no value, this means no default
+#   #variable=foo  -- By commenting out the line, or deleting it, this uses the default
+
+# Use the command 'task show' to see all defaults and overrides
+
+# Files
+data.location=~/.task
+
+# Color theme (uncomment one to use)
+#include /usr/share/taskwarrior/light-16.theme
+#include /usr/share/taskwarrior/light-256.theme
+#include /usr/share/taskwarrior/dark-16.theme
+#include /usr/share/taskwarrior/dark-256.theme
+#include /usr/share/taskwarrior/dark-red-256.theme
+#include /usr/share/taskwarrior/dark-green-256.theme
+#include /usr/share/taskwarrior/dark-blue-256.theme
+#include /usr/share/taskwarrior/dark-violets-256.theme
+#include /usr/share/taskwarrior/dark-yellow-green.theme
+#include /usr/share/taskwarrior/dark-gray-256.theme
+#include /usr/share/taskwarrior/dark-gray-blue-256.theme
+include /usr/share/taskwarrior/solarized-dark-256.theme
+#include /usr/share/taskwarrior/solarized-light-256.theme
+#include /usr/share/taskwarrior/no-color.theme
+
+max_active_tasks=20
+# Taskwarrior color settings
+color=on
+color.header.bold=on
+color.label=yellow
+color.uda=green
+color.overdue=red
+color.due.today=blue
+
+
+# User Defined Attributes
+uda.estimate.type=duration
+uda.estimate.label=Est
+
+# Timebox UDAs
+uda.tb_estimate.type=numeric
+uda.tb_estimate.label=Est
+uda.tb_real.type=numeric
+uda.tb_real.label=Real
+
+# Taskwarrior notification settings (requires external tool like 'tasknotify')
+#notification.command=/path/to/your/notification/script.sh
+
+# Taskwarrior hooks
+#hook.commit.pre=/path/to/your/pre-commit-script.sh
+#hook.commit.allowall=yes
+
+# Taskwarrior extensions (if you have any)
+# include /path/to/your/extensions.rc
+
+# Taskwarrior web settings (if you use the web UI)
+# web.port=YOUR_PORT
+# web.server=YOUR_SERVER
+
+# Taskwarrior encryption settings (if you use encryption)
+# encryption=on
+# encryption.key=YOUR_ENCRYPTION_KEY
+
+# Taskwarrior undo settings
+undo.data.location=~/.task_undo
+
+# Taskwarrior recurrence settings
+recurrence.confirmation=1
+
+# Taskwarrior hooks
+#hook.commit.pre=/path/to/your/pre-commit-script.sh
+#hook.commit.allowall=yes
+
+# Taskwarrior urgency settings
+urgency.age.coefficient=1.0
+urgency.age.max=365
+
+# Taskwarrior JSON export settings
+json.array=off
+json.depends.array=on
+
+news.version=2.6.0
+uda.estimate.type=numeric
+uda.estimate.label=Est
+minimal.labels=ID,Due,Project,Description,Est
+uda.reviewed.type=date
+uda.reviewed.label=Reviewed
+report._reviewed.description=Tasksh review report.  Adjust the filter to your needs.
+report._reviewed.columns=uuid
+report._reviewed.sort=reviewed+,modified+
+report._reviewed.filter=( reviewed.none: or reviewed.before:now-6days ) and ( +PENDING or +WAITING )
+report.list.labels=ID,Due,Active,Age,Time Spent,...,Urg
+report.list.columns=id,due,start.age,entry.age,totalactivetime,...,urgency
+#}}}

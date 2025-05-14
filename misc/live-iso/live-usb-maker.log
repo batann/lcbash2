@@ -1,0 +1,105 @@
+=====================================================================
+/usr/local/bin/live-usb-maker gui -N -C off --from=/media/demo/rootMX23/home/snapshot/antix.i3-20250425_1838.iso -t /dev/sdd
+        program: live-usb-maker
+        started: Fri Apr 25 12:40:32 PM EDT 2025
+        version: 2.41.19-2302 (Sat, 25 Feb 2023 12:45:10 -0500)
+         kernel: 6.1.0-31-amd64
+             OS: MX 23.5 (Libretto)
+      found lib: /usr/local/lib/cli-shell-utils/cli-shell-utils.bash
+    lib version: 2.41.05-2302 (Sat, 25 Feb 2023 12:45:10 -0500)
+---------------------------------------------------------------------
+
+Found man page: live-usb-maker.1
+Found live media device /dev/sdc
+Will use target device /dev/sdd (28.9G Kingston DataTraveler 3.0)
+Will use source file /media/demo/rootMX23/home/snapshot/antix.i3-20250425_1838.iso
+Estimated extfs overhead for 29509M is 44M
+
+                    Total      Used     Extra
+   entire drive  28.9 GiB 28.9 GiB     1 MiB
+ main partition  28.8 GiB 1.85 GiB  27.0 GiB
+ uefi partition    50 MiB    0 MiB    50 MiB
+
+Ready to make live-usb on device sdd
+... by copying file /media/demo/rootMX23/home/snapshot/antix.i3-20250425_1838.iso
+
+>> partition-clear
+Total bytes: 30995907072
+Total blocks: 60538881
+ > dd status=none if=/dev/zero of=/dev/sdd bs=512 count=34
+ > dd status=none if=/dev/zero of=/dev/sdd bs=512 count=34 seek=64
+ > dd status=none conv=notrunc if=/dev/zero of=/dev/sdd bs=512 count=34 seek=60538847
+ > partprobe /dev/sdd
+
+>> partition-make
+Using msdos partitioning
+ > parted --script --align optimal /dev/sdd unit MiB mklabel msdos
+ > dd status=none if=/dev/zero of=/dev/sdd seek=1024 bs=1K count=128
+ > parted --script --align optimal /dev/sdd unit MiB mkpart primary 1 29509
+ > parted --script --align optimal /dev/sdd unit MiB set 1 boot on
+ > dd status=none if=/dev/zero of=/dev/sdd seek=30217216 bs=1K count=128
+ > parted --script --align optimal /dev/sdd unit MiB mkpart primary 29509 29558
+ > parted --script --align optimal /dev/sdd unit MiB set 2 esp on
+ > partprobe /dev/sdd
+ > wait_for_file /dev/sdd1
+
+>> makefs-bios
+ > mkfs.ext4 -O ^64bit -m0 -i16384 -J size=32 /dev/sdd1
+mke2fs 1.47.0 (5-Feb-2023)
+64-bit filesystem support is not enabled.  The larger fields afforded by this feature enable full-strength checksumming.  Pass -O 64bit to rectify.
+Creating filesystem with 7554048 4k blocks and 1888656 inodes
+Filesystem UUID: 7100219d-ebff-41c8-bd0d-0a148bf3b1e3
+Superblock backups stored on blocks: 
+	32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, 2654208, 
+	4096000
+
+Allocating group tables:   0/231       done                            
+Writing inode tables:   0/231       done                            
+Creating journal (8192 blocks): done
+Writing superblocks and filesystem accounting information:   0/231       done
+
+ > tune2fs -L Live-usb /dev/sdd1
+tune2fs 1.47.0 (5-Feb-2023)
+ > wait_for_file /dev/sdd2
+
+>> makefs-uefi
+ > mkfs.vfat -F 32 -n LIVE-UEFI /dev/sdd2
+mkfs.fat 4.2 (2021-01-31)
+ > partprobe /dev/sdd
+ > wait_for_file /dev/sdd1
+ > mkdir -p /run/live-usb-maker/main
+ > mount -t ext4 /dev/sdd1 /run/live-usb-maker/main
+ > wait_for_file /dev/sdd2
+ > mkdir -p /run/live-usb-maker/uefi
+ > mount -t vfat /dev/sdd2 /run/live-usb-maker/uefi
+
+Filesystem     Type  Size  Used Avail Use% Mounted on
+/dev/sdd1      ext4   29G   24K   29G   1% /run/live-usb-maker/main
+/dev/sdd2      vfat   49M   512   49M   1% /run/live-usb-maker/uefi
+
+
+>> copy-uefi
+copy from iso to uefi partition
+files [Ee][Ff][Ii] boot/{grub,uefi-mt} version
+
+>> copy-main
+ > rm -rf /run/live-usb-maker/main/boot.orig
+copy from iso to main partition
+vm.dirty_bytes = 20000000
+copy /antiX/vmlinuz
+ > cpio -pdm --quiet /run/live-usb-maker/main/
+ > e4defrag -v ./antiX/vmlinuz
+e4defrag 1.47.0 (5-Feb-2023)
+ext4 defragmentation for ./antiX/vmlinuz
+[1/1][1/1]./antiX/vmlinuz:	100%  extents: 1 -> 1	[ OK ]
+ Success:			[1/1]
+copy /antiX/initrd.gz
+ > cpio -pdm --quiet /run/live-usb-maker/main/
+ > e4defrag -v ./antiX/initrd.gz
+e4defrag 1.47.0 (5-Feb-2023)
+ext4 defragmentation for ./antiX/initrd.gz
+[1/1][1/1]./antiX/initrd.gz:	100%  extents: 1 -> 1	[ OK ]
+ Success:			[1/1]
+copy remaining files ...
+ > cpio -pdm --quiet /run/live-usb-maker/main/
+copy pids: 11069 11072

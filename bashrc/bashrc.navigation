@@ -1,0 +1,423 @@
+# vim:fileencoding=utf-8:foldmethod=marker
+
+MENU=(Edit Execute Play Copy Upload Rename Trash)
+
+
+#{{{ >>>   ltr  LCTRASH
+ltr() {
+
+if [[ ! -d "$HOME/.Trash" ]]; then
+	mkdir "$HOME/.Trash"
+	fi
+                    if [[ $1 != "list" ]] && [[ $1 != "rm" ]] && [[ $1 != "help" ]];
+                    then
+                        for FILE in "$@"
+		do
+
+                        if [[ $FILE == /home/batan/.Trash/$FILE ]];
+                            then
+                                COUN=$(ls /home/batan/.Trash/$FILE|wc -l)
+                                ((COUN++))
+                                mv "$FILE" /home/batan/.Trash/$FILE$COUN
+                                else
+                                    mv "$FILE" /home/batan/.Trash/
+                                    fi
+                                done
+                                    fi
+
+            if [[ $1 == list ]]; then
+                echo -e "\033[36m"
+                if [ -z "$(ls -A "/home/batan/.Trash")" ]; then
+                echo -e "\033[36mThe directory .Trash is empty.\033[0m" 
+            else
+                echo -e "\033[36m"
+                ls /home/batan/.Trash/
+                echo -e "\033[0m"
+                return 0
+                fi
+            fi
+
+            if [[ $1 == rm ]]; then
+                echo -e "\033[36mAre You sure you want to empty .Trash?\033[32m"           
+                read -n1 -p "Enter [[ANY]] to continue..." xxx
+                echo -e "\033[0m"
+                sudo rm -rf /home/batan/.Trash/
+                mkdir -p /home/batan/.Trash/
+                return 0
+            fi
+            
+}
+# }}}
+
+#{{{ >>>   lc-directory and file navigation
+#{{{ >>>   lcedit edit files
+lcedit() {
+# Define options and corresponding commands horizontally
+OPTIONS=("Edit " "Copy " "Execute " "Play " "Upload " "Rename " "Trash ")
+COMMANDS=("vim $1 " "cp $1 /home/batan" "sudo -u batan bash $1" "mpv $1" "megaput $1" "qmv -f do -e vim $1 " "ltr $1 " )
+NUM_OPTIONS=${#OPTIONS[@]}
+
+# Function to display options horizontally
+DISPLAY_OPTIONS() {
+tput setab 4
+	echo -ne "${White}\033[1G"  # Move cursor to beginning of the line
+    for ((i=0; i<NUM_OPTIONS; i++)); do
+        if [[ $i -eq $selected ]]; then
+            echo -ne "\033[37m\e[7m${OPTIONS[i]}\e[27m "  # Highlight selected option
+        else
+            echo -n "${OPTIONS[i]} "
+        fi
+    done
+	tput sgr0
+}
+
+# Function to execute selected command
+EXECUTE_COMMAND() {
+
+    echo -e "   \033[36m>>>   \033[32mExecuting command: \033[37m${COMMANDS[selected]}"
+    # Execute the actual command associated with the selected option
+    ${COMMANDS[selected]}
+    return 1
+    
+}
+
+# Initialize
+selected=0
+DISPLAY_OPTIONS
+
+# Main loop
+while true; do
+    read -s -n1 key  # Read user input
+    case $key in
+        A)  # Up arrow key
+            ((selected--))
+            ;;
+        B)  # Down arrow key
+            ((selected++))
+            ;;
+        "") # Enter key
+            EXECUTE_COMMAND
+            return 1
+
+            ;;
+    esac
+
+    if [[ $selected -lt 0 ]]; then
+        selected=$((NUM_OPTIONS - 1))
+    elif [[ $selected -ge $NUM_OPTIONS ]]; then
+        selected=0
+    fi
+    DISPLAY_OPTIONS
+done
+
+}
+#}}}
+#{{{ >>>   na navigate directories max 10 display scroll left right arrow cd to or from
+na() {
+    #!/bin/bash
+    tput civis  # Hide cursor
+HH="\033[32m┃\033[0m"
+HF="\033[37m┇\033[0m" 
+
+# Initialize options
+    REFRESH_OPTIONS() {
+        if [[ $current_view == "dirs" ]]; then
+            OPTIONS=("Quit" $(ls -d */ 2>/dev/null))  # Precede with a "Quit" option
+        else
+            OPTIONS=("Menu" $(find . -maxdepth 1 -type f))  # Precede with a "Quit" option
+            return 0
+        fi
+        NUM_OPTIONS=${#OPTIONS[@]}  # Update number of options
+        start_index=0               # Reset start index
+        selected=0                  # Reset selected index
+        DIR_CURRENT=$(pwd)
+    }
+
+    # Initialize toggle variable
+    current_view="dirs"  # Default to directories
+
+    # Refresh options initially
+    REFRESH_OPTIONS
+
+    DISPLAY_OPTIONS() {
+        clear
+        for i in $(seq 20 -1 11);
+        do
+            tput cup $i 41
+            echo -e $HH
+        done
+        
+        tput cup 9 0  # Move to the 9th line, 0th column
+        echo -e "$HF$HF$HF   \033[36m$DIR_CURRENT\033[0m   $HF$HF$HF"
+        echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
+        for ((i=0; i<MAX_DISPLAY; i++)); do
+            idx=$((start_index + i))
+            if [[ $idx -ge $NUM_OPTIONS ]]; then
+                break
+            fi
+            if [[ $idx -eq $selected ]]; then
+                echo -e "$HH \e[7m${OPTIONS[idx]}\e[27m"  # Highlight selection
+            else
+                echo -e "$HH ${OPTIONS[idx]}"
+            fi
+        done
+        # Ensure we always have 10 lines of output (add empty lines if less than 10 options)
+        for ((i=NUM_OPTIONS; i<MAX_DISPLAY; i++)); do
+            echo ""  # Adding empty lines to fill the screen
+        done
+        echo -e "\033[32m┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\033[0m"
+    }
+
+    # Temporary file to store the final directory
+    OUTPUT_FILE=$(mktemp)
+
+    # Trap to clean up on exit
+    cleanup() {
+        rm -f "$OUTPUT_FILE"
+        tput cnorm  # Restore cursor
+    }
+    trap cleanup EXIT
+
+    MAX_DISPLAY=10  # Number of options to display at a time
+
+    while true; do
+        DISPLAY_OPTIONS
+          read -rsn1 key
+        if [[ $key == $'\x1b' ]]; then  # Detect Escape sequences (Arrow keys)
+            read -rsn2 key
+            if [[ $key2 == $'\t' ]]; then
+                read -rsn3 key
+            fi
+        fi
+
+        case "$key" in
+            '[A')  # Up arrow
+                ((selected--))
+                if [[ $selected -lt start_index ]]; then
+                    ((start_index--))
+                fi
+                ;;
+            '[B')  # Down arrow
+                ((selected++))
+                if [[ $selected -ge $((start_index + MAX_DISPLAY)) ]]; then
+                    ((start_index++))
+                fi
+                ;;
+            '[C')  # Right arrow (execute)
+                if [[ $selected -eq 0 ]]; then
+                    echo "Exiting..."
+                    break
+                else
+                    echo "Selected: ${OPTIONS[selected]}"
+                    if [[ $current_view == "dirs" ]]; then
+                        cd "${OPTIONS[selected]}" 2>/dev/null || echo "Cannot cd into ${OPTIONS[selected]}"
+                    else
+                        lcedit "${OPTIONS[selected]}"  # Open file in lcedit
+                    fi
+                    REFRESH_OPTIONS
+                fi
+                ;;
+            '[D')  # Left arrow (go back)
+                cd ..  # Navigate one directory up
+                REFRESH_OPTIONS
+                ;;
+
+            "\`") if [[ $AA == '\`' ]]; then
+                AA=""
+            else 
+                AA="\`"
+                fi
+                ;;
+            "")  # Enter key (execute)
+                if [[ $selected -eq 0 ]]; then
+                    echo "Exiting..."
+                    lcfiles
+                    return 0
+                else
+                    echo "Selected: ${OPTIONS[selected]}"
+                    if [[ $current_view == "dirs" ]]; then
+                        cd "${OPTIONS[selected]}" 2>/dev/null || echo "Cannot cd into ${OPTIONS[selected]}"
+                    else
+                      #  lcedit "${OPTIONS[selected]}"
+                      echo "Blah"
+                    fi
+                    REFRESH_OPTIONS
+                fi
+                ;;
+            '\t')  # TAB key - pass OPTION[selected] to input variable
+                  input="$input ${OPTIONS[selected]}"
+
+  #              REFRESH_OPTIONS
+                ;;
+        esac
+
+
+        # Wrap around selection
+        if [[ $selected -lt 0 ]]; then
+            selected=$((NUM_OPTIONS - 1))
+            start_index=$((NUM_OPTIONS - MAX_DISPLAY))
+            ((start_index < 0)) && start_index=0
+        elif [[ $selected -ge $NUM_OPTIONS ]]; then
+            selected=0
+            start_index=0
+        fi
+    done
+}
+
+#}}}
+#{{{ >>>   na navigate directories max 10 display scroll left right arrow cd to or from
+lcfiles() {
+    #!/bin/bash
+    tput civis  # Hide cursor
+HH="\033[32m┃\033[0m"
+HF="\033[37m┇\033[0m" 
+CK="\033[32m[ ]\033[0m"
+CKD="\033[32m[\033[0mX\033[32m]\033[0m"
+
+
+    # Initialize options
+    REFRESH_OPTIONS() {
+        if [[ $current_view == "dirs" ]]; then
+            OPTIONS=("XXX" $(find . -maxdepth 1 -type f|sed 's/\.\///g'|sort 2>/dev/null))  # Precede with a "Quit" option
+        else
+            OPTIONS=("Menu" $(find . -maxdepth 1 -type f|sed 's/\.\///g'|sort 2>/dev/null))  # Precede with a "Quit" option
+        fi
+        NUM_OPTIONS=${#OPTIONS[@]}  # Update number of options
+        start_index=0               # Reset start index
+        selected=0                  # Reset selected index
+        DIR_CURRENT=$(pwd)
+    }
+
+    # Initialize toggle variable
+    current_view="dirs"  # Default to directories
+
+    # Refresh options initially
+    REFRESH_OPTIONS
+
+declare -A selected_files  # Associative array to store selected files
+
+
+
+
+
+
+    DISPLAY_OPTIONS() {
+        clear
+        for i in $(seq 20 -1 11);
+        do
+            tput cup $i 41
+            echo -e $HH
+        done
+        tput cup 9 0  # Move to the 9th line, 0th column
+        echo -e "$HF$HF$HF \033[36m${OPTIONS[selected]}\033[0m $HF$HF$HF"
+        echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
+        for ((i=0; i<MAX_DISPLAY; i++)); do
+            idx=$((start_index + i))
+            if [[ $idx -ge $NUM_OPTIONS ]]; then
+                break
+            fi
+            if [[ $idx -eq $selected ]]; then
+                echo -e "$HH \e[7m${OPTIONS[idx]}\e[27m"  # Highlight selection
+            else
+                echo -e "$HH ${OPTIONS[idx]}"
+            fi
+        done
+        # Ensure we always have 10 lines of output (add empty lines if less than 10 options)
+        for ((i=NUM_OPTIONS; i<MAX_DISPLAY; i++)); do
+            echo ""  # Adding empty lines to fill the screen
+        done
+        echo -e "\033[32m┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\033[0m"
+    }
+
+    # Temporary file to store the final directory
+    OUTPUT_FILE=$(mktemp)
+
+    # Trap to clean up on exit
+    cleanup() {
+        rm -f "$OUTPUT_FILE"
+        tput cnorm  # Restore cursor
+    }
+    trap cleanup EXIT
+
+    MAX_DISPLAY=10  # Number of options to display at a time
+
+    while true; do
+        DISPLAY_OPTIONS
+          read -rsn1 key
+        if [[ $key == $'\x1b' ]]; then  # Detect Escape sequences (Arrow keys)
+            read -rsn2 key
+        fi
+
+        case "$key" in
+            '[A')  # Up arrow
+                ((selected--))
+                if [[ $selected -lt start_index ]]; then
+                    ((start_index--))
+                fi
+                ;;
+            '[B')  # Down arrow
+                ((selected++))
+                if [[ $selected -ge $((start_index + MAX_DISPLAY)) ]]; then
+                    ((start_index++))
+                fi
+                ;;
+            '[C')  # Right arrow (execute)
+                if [[ $selected -eq 0 ]]; then
+                    echo "Exiting..."
+                    break
+                else
+                    echo "Selected: ${OPTIONS[selected]}"
+                    if [[ $current_view == "dirs" ]]; then
+                        cd "${OPTIONS[selected]}" 2>/dev/null || echo "Cannot cd into ${OPTIONS[selected]}"
+                    else
+                        #lcedit "${OPTIONS[selected]}"  # Open file in lcedit
+                        return 0
+                    fi
+                    REFRESH_OPTIONS
+                fi
+                ;;
+            '[D')  # Left arrow (go back)
+                cd ..  # Navigate one directory up
+                REFRESH_OPTIONS
+                ;;
+            "")  # Enter key (execute)
+                if [[ $selected -eq 0 ]]; then
+                    lcedit "${OPTIONS[selected]}"
+					return 0
+                    
+                else
+                    echo "Selected: ${OPTIONS[selected]}"
+                    if [[ $current_view == "dirs" ]]; then
+                        lcedit "${OPTIONS[selected]}" 
+						return 0
+                    else
+                        lcedit "${OPTIONS[selected]}"
+						return 0
+                    fi
+                    REFRESH_OPTIONS
+                fi
+                ;;
+           '$'\t'')  # TAB key - Toggle between directories and files
+                if [[ $current_view == "dirs" ]]; then
+                    current_view="files"
+                else
+                    current_view="dirs"
+                fi
+                REFRESH_OPTIONS
+                ;;
+        esac
+
+
+        # Wrap around selection
+        if [[ $selected -lt 0 ]]; then
+            selected=$((NUM_OPTIONS - 1))
+            start_index=$((NUM_OPTIONS - MAX_DISPLAY))
+            ((start_index < 0)) && start_index=0
+        elif [[ $selected -ge $NUM_OPTIONS ]]; then
+            selected=0
+            start_index=0
+        fi
+    done
+}
+
+#}}}}}}

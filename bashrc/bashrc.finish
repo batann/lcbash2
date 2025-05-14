@@ -1,0 +1,26 @@
+PROMPT_COMMAND="echo"
+
+FLAIR="⛧"
+BAR="─"
+TL="╭─"
+BL="╰─"
+LB1="❨"
+RB1="❩"
+LB2="⟦"
+RB2="⟧"
+END="─❯▶"
+ATHOST="${TL}${LB2} ${FLAIR} $(task summary | head -n4 | tail -n1) $(echo -e "\033[36m<<<-->>>  \033[33mdate:\033[37m")$(date +%j)$(echo -e "\033[31m" ${FLAIR} ${RB2})"    # string top left
+TIMELENGTH=24                                                        # timestamp length
+OFFSET=$((${#ATHOST} + ${TIMELENGTH} + 1))
+
+BLINK="\x1B[5m"
+RED="\x1B[1;31m"
+RESET="\x1B[0m"
+
+if [[ "${UID}" -eq "0" ]]; then
+  ATHOST=$(echo "${ATHOST}" | sed "s/${USER}/${BLINK}${RED}&${RESET}/; s/${HOSTNAME}/${RED}&${RESET}/")
+else
+  ATHOST=$(echo "${ATHOST}" | sed "s/${HOSTNAME}/${RED}&${RESET}/")
+fi
+
+PS1='${ATHOST}\[$(printf "%*s" $(($(tput cols)-${OFFSET})) "" | sed "s/ /${BAR}/g")${LB2}\[\e[1;30m\]\[\e[4m\] \D{%Y-%m-%d %T%P}\] \[\e[0m\]${RB2}\n${BL}${LB1} \[\e[1;34m\]\w\[\e[0m\] ${RB1}${END} '
