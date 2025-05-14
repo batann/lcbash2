@@ -1,0 +1,171 @@
+#!/bin/bash
+
+all_items=($($@))
+search_string=""
+selected=0
+offset=0
+max_visible=10
+selected_items=()
+
+#{{{>>>   lcplay >#10
+lcplay() {
+	CCOUNT="0"
+    COU="0"
+
+    for x in ${selected_items[@]};  do
+        tput cup $(( $COU + 3 )) 0 
+		echo -e "\033[34m ────▶ \033[37m Now Playing ───▶\033[0m"
+        tput cup $(( $COU + 3 )) 26
+        echo -e "\033[33m$x\033[0m"
+		MPP=$(find /media/batan/100/Music/ -maxdepth 5 -type f -name "*${x}*")
+        total_lenght=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 $MPP |sed 's/\.//')
+        modified=$(( $total_lenght / 50 ))
+        m1=$(echo $modified|cut -c1)
+        m2=$(echo $modified|cut -c2)
+        /usr/bin/mpv --no-video --no-terminal $MPP 2>/dev/null &
+        pid=$!
+        lcmusicnotify &
+        
+        tput cup 13 0;tput el;tput cup 13 0;lcfmbottom1
+		while kill -0 $pid 2>/dev/null ; do
+			for i in $(seq 26 76); do 
+				tput cup $(( CCOUNT + 14 )) 8
+				echo -e "${White}[[  " 
+            	tput cup $(( CCOUNT + 14 )) 14 
+            	echo -e "${Green}${abc}%"
+            	tput cup $(( CCOUNT + 14 )) 22 
+   echo -e "${White}]]" 
+            	tput cup $(( CCOUNT + 14 )) $i 
+            	tput setab 20 
+            	echo -e '>\033[0m' 
+            	sleep $m1.$m2 
+            	((abc+=2))
+			done
+			tput cup $(( $COU + 3 )) 0
+			echo -e "\033[34m       \033[37m                 \033[0m"
+			tput cup $(( CCOUNT + 14 )) 0
+			tput el
+        	tput cup $(( CCOUNT + 14 )) 0 
+        	((COU++))
+        	abc="0"
+ 			sleep 0.2
+		done
+	done
+	
+	handle_keys() {
+		while true; do
+			read -rsn1 key
+			case "$key" in
+				'+') pulsemixer --change-volume +5 ;;
+				'-') pulsemixer --change-volume -5 ;;
+				  q) break ;;
+			  esac
+		  done
+		}
+	}
+	
+#}}} <#67
+filter_items() {
+  visible_items=()
+  for item in "${all_items[@]}"; do
+    if [[ "${item,,}" == *"${search_string,,}"* ]]; then
+      visible_items+=("$item")
+    fi
+  done
+}
+
+is_selected() {
+  local check="$1"
+  for s in "${selected_items[@]}"; do
+    [[ "$s" == "$check" ]] && return 0
+  done
+  return 1
+}
+
+filter_items
+
+draw_menu() {
+  clear
+  echo "Search: [$search_string]"
+  echo "Selected: ${#selected_items[@]} item(s)"
+  echo
+  local start=$offset
+  local end=$(( offset + max_visible ))
+  for i in "${!visible_items[@]}"; do
+    (( i < start || i >= end )) && continue
+    local prefix="  "
+    local marker="   "
+    (( i == selected )) && prefix="> "
+
+    if is_selected "${visible_items[i]}"; then
+      marker="[*]"
+    fi
+
+    printf "%s%s %s\n" "$prefix" "$marker" "${visible_items[i]}"
+  done
+}
+
+while true; do
+  draw_menu
+  IFS= read -rsn1 key
+
+  if [[ $key == $'\x1b' ]]; then
+    read -rsn2 rest
+    key+="$rest"
+    case "$key" in
+      $'\x1b[A') (( selected > 0 )) && ((selected--)) ;;
+      $'\x1b[B') (( selected < ${#visible_items[@]} - 1 )) && ((selected++)) ;;
+    esac
+  elif [[ $key == $'\x7f' ]]; then
+    search_string="${search_string::-1}"
+    filter_items
+    selected=0
+    offset=0
+  elif [[ "$key" =~ [a-zA-Z] ]]; then
+    search_string+="$key"
+    filter_items
+    selected=0
+    offset=0
+  elif [[ -z $key ]]; then
+    if [[ -z $search_string ]]; then
+      break
+	  echo "BBB"
+ 
+	fi
+    current="${visible_items[selected]}"
+    is_selected "$current" || selected_items+=("$current")
+  fi
+
+  (( selected < offset )) && offset=$selected
+  (( selected >= offset + max_visible )) && offset=$(( selected - max_visible + 1 ))
+done
+
+# Final result
+echo
+echo "You selected:"
+clear
+for item in "${selected_items[@]}"; do
+ #echo "- $item"
+  # your-command "$item"
+ echo $item 
+ clear 
+ echo -e "\033[34m1\033[33m) \033[36m>>> \033[37mWatch"
+ echo -e "\033[34m2\033[33m) \033[36m>>> \033[37mDownload"
+ echo -e "\033[34m3\033[33m) \033[36m>>> \033[37mOpen"
+ echo -e "\033[34m4\033[33m) \033[36m>>> \033[37mSource"
+ 
+ tput civis
+ read -n1 nnn
+ if [[ $nnn == "1" ]]; then
+	 mpv $item
+ elif [[ $nnn == "2" ]]; then
+	 /usr/bin/yt-dlp --restrict-filenames $item
+ elif [[ $nnn == "3" ]]; then
+	 firefox $item
+ fi
+
+# echo ${selected_items[@]}
+# echo ${selected_items[@]} > xclip -selection clipboard
+
+done
+

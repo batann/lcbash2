@@ -1,0 +1,184 @@
+= lcbash =
+# vim:fileencoding=utf-8:foldmethod=marker
+#{{{ >>> Directory Structure #>3 >#3
+
+lcbash/
+├── misc/                    # Random useful scripts, experiments
+│   ├── file_utils.sh
+│   └── ...                  # Additional function scripts
+├── functions/               # Dynamically sourced functions in folds
+│   ├── str_trim.sh
+│   ├── file_utils.sh
+│   └── ...                  # Additional function scripts
+├── bashrc/
+│   ├── .bashrc
+│   ├── .bashrc.aliases
+│   ├── .bashrc.navigation
+│   └── files/               # Development and experimental .bashrc files
+├── dotfiles/                # Custom .dotfiles backups or template
+│   ├── .vimrc
+│   ├── .taskrc
+│   ├── .tmux.conf
+│   ├── .lc-cd
+│   ├── .lc-sign
+│   ├── .rss.ompl
+│   ├── .tkremind
+│   ├── .xboardrc
+│   ├── .profile
+│   ├── .inputrc
+│   ├── .Xdefaults
+│   ├── .Xresources
+│   ├── .bash_profile
+│   ├── .bash_logout
+│   ├──
+│   ├──
+│   ├──
+│   ├──
+│   └── ...                  # Additional function scripts
+└── README.md                # Documentation for the system
+
+├── media/
+│   └── batan/
+│       ├── 100/
+│       ├── 200/
+│       ├── 300/
+│       ├── 400/
+│       ├── 500/
+│       ├── 600/
+│       ├── 700/
+│       ├── 800/
+│       └── 900/
+├── home/
+│   └── batan/
+│       └── .config/
+│           ├── autostart/
+│           ├── castero/
+│           ├── cava/
+│           ├── homepage/
+│           ├── i3/
+│           ├── i3blocks/
+│           ├── i3lock-color/
+│           ├── i3status/
+│           ├── kitty/
+│           ├── lc-bashrc/
+│           ├── lc-clipboard/
+│           ├── lc-fm/
+│           ├── lc-mashpodder/
+│           ├── lc-ollama/
+│           ├── lists/
+│           ├── menus/
+│           ├── Mousepad/
+│           ├── mpd/
+│           ├── mpv/
+│           ├── MX-Linux/
+│           ├── ncmpcpp/
+│           ├── nvim/
+│           ├── picom/
+│           ├── polybar/
+│           ├── pulse/
+│           ├── ranger/
+│           ├── rofi/
+│           ├── session/
+│           ├── Thunar/
+│           ├── volumeicon/
+│           ├── xarchiver/
+│           ├── xfce4/
+│           ├── xfce-superkey/
+│           ├── yt-dlp/
+│           └──
+
+#}}} <#90
+
+== Directory and File Descriptions: ==
+	lcbash/: 			 Your main modular Bash project folder, where everything lives.
+	bashrc.aliases: 	 Main file that registers all aliases and functions.
+	bashrc.navigation: 	 Custom functions for easy navigation (e.g., cd helpers).
+	bashrc.functions:	 General-purpose utilities, such as clipboard management and string functions.
+	dotfiles/:			 Backup or template files for configuration files like .vimrc, .bash_profile, etc.
+	misc/:				 Random scripts or utilities that don’t fit in the core structure but are still useful.
+	functions/:			 Each file here corresponds to one function, written in foldable chunks for easier sourcing.
+	README.md:			 Provides documentation for users and future maintainers, explaining the structure and usage.
+
+README.md
+Got it! Here's the updated structure with the `.bashrc` files moved to their own subdirectory `lcbash/bashrc/files`:
+
+```plaintext
+lcbash/
+├── bashrc/
+│   └── files/               # Development and experimental .bashrc files
+├── dotfiles/                # Custom .dotfiles backups or templates
+├── misc/                    # Random useful scripts, experiments
+├── functions/               # Dynamically sourced functions in folds
+│   ├── str_trim.sh
+│   ├── file_utils.sh
+│   └── ...                  # Additional function scripts
+└── README.md                # Documentation for the system
+
+# `lcbash` – A Modular Bash Function and Utility Library
+
+## Overview
+
+`lcbash` is a modular and scalable collection of Bash utilities, functions, and scripts. It is designed for ease of use, maintainability, and efficient function sourcing. The project is split into manageable components, ensuring that each function can be sourced dynamically, and each file has a clear purpose.
+
+## Project Structure
+
+The project is organized into several directories:
+
+- **`bashrc/`**: Contains `.bashrc` files (located in the `files/` subdirectory). This is where you can experiment and develop custom shell configurations.
+- **`dotfiles/`**: Backup or template files for other dotfiles like `.vimrc`, `.bash_profile`, and others.
+- **`misc/`**: A collection of random scripts and utilities.
+- **`functions/`**: Each file in this directory contains a single function, written in foldable chunks for easy sourcing.
+- **`README.md`**: This file, providing documentation and system overview.
+
+## Folder Breakdown
+
+### `bashrc/`
+- **`files/`**: This directory contains the development and experimental `.bashrc` files. It is meant to be used for creating custom aliases, functions, and other shell configurations.
+
+### `functions/`
+- This directory holds the core functions for the system. Functions are written in foldable sections for easy sourcing and modular use. Functions are added here by naming each script after the function it performs (e.g., `str_trim.sh` for the `str_trim` function).
+
+---
+
+## How to Use
+
+1. **Adding Functions:**
+   - Functions are placed in the `functions/` directory. Each function should be contained within its own script file.
+   - Functions are written in foldable blocks (i.e., `#{{{` for the start of a fold and `#}}}` for the end). This allows functions to be sourced dynamically based on need. >#147 <#147
+   - Use the markers `>#` followed by the line number to specify where the fold begins for easier sourcing and navigation.
+
+2. **Source a Function:**
+   - To source a function, use:
+     ```bash
+     source /path/to/function/file.sh
+     ```
+
+3. **Modify `.bashrc`:**
+   - You can experiment with your `.bashrc` files in the `bashrc/files/` directory. Remember that these files should contain your custom aliases, environment variables, and other Bash settings.
+
+4. **Vim Auto-update:**
+   - Whenever you modify a function file in Vim, the line numbers marked with `>#` are updated automatically to reflect the real line position.
+
+---
+
+## Utilities
+
+### `lcbash/tools/`
+- **`fold_find.sh`**: Find the start and end lines of a function fold.
+- **`fold_extract.sh`**: Extract and source a function by name.
+- **`fold_validate.sh`**: Validate that all folds are correctly matched with start and end markers.
+
+---
+
+## Development Notes
+
+- **Modularization**: The project is designed with modularity in mind. Functions can be added and updated without interfering with other parts of the project.
+- **Easy Sourcing**: With the fold system and the `>#` markers, sourcing functions is made simple and efficient.
+
+---
+
+Feel free to modify and expand upon this template as your project grows!
+
+---
+
+### Let me know what you think! If this structure works, I'll move on to **Step 3** — building the utility scripts inside `lcbash/tools/`.

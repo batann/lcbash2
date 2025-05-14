@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Grab Media
+Exec=sh -c 'grab-media-dmenu.sh "$(xclip -o -selection clipboard)"'
+Terminal=false
+Type=Application
+Categories=Video;
+

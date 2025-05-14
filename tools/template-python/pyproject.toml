@@ -1,0 +1,9 @@
+#!/bin/bash
+set -e
+dst=${1:-mypythonapp}
+cp -r "$(dirname "$0")/template-python" "$dst"
+cd "$dst"
+rm -f init-python.sh
+sed -i "s/example/$dst/" pyproject.toml
+echo "Created Python project at $dst"
+

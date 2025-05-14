@@ -1,0 +1,112 @@
+#!/bin/bash
+# vim:fileencoding=utf-8:foldmethod=marker
+all_items=($(find /home/batan /home/batan/.config /media/batan /media/batan/100 -maxdepth 1 -type d && find /media/batan -maxdepth 1 -type d |sed 's/$/\/home\/batan/g'))
+search_string=""
+selected=0
+offset=0
+max_visible=10
+selected_items=()
+EEE="\033[33m═\033[0m"
+
+for x in $(seq  1 $(( $AAA - 1 )));do DDD="$DDD$EEE" ;done
+
+filter_items() {
+  visible_items=()
+  for item in "${all_items[@]}"; do
+    if [[ "${item,,}" == *"${search_string,,}"* ]]; then
+      visible_items+=("$item")
+    fi
+  done
+}
+
+is_selected() {
+  local check="$1"
+  for s in "${selected_items[@]}"; do
+    [[ "$s" == "$check" ]] && return 0
+  done
+  return 1
+}
+
+filter_items
+
+draw_menu() {
+  clear
+  echo "Search: [$search_string]"
+  echo "Selected: ${#selected_items[@]} item(s)"
+  echo
+  local start=$offset
+  local end=$(( offset + max_visible ))
+  for i in "${!visible_items[@]}"; do
+    (( i < start || i >= end )) && continue
+    local prefix="  "
+    local marker="   "
+    (( i == selected )) && prefix="> "
+
+    if is_selected "${visible_items[i]}"; then
+      marker="[*]"
+    fi
+
+    printf "%s%s %s\n" "$prefix" "$marker" "${visible_items[i]}"
+  done
+}
+
+while true; do
+  draw_menu
+  IFS= read -rsn1 key
+
+  if [[ $key == $'\x1b' ]]; then
+    read -rsn2 rest
+    key+="$rest"
+    case "$key" in
+      $'\x1b[A') (( selected > 0 )) && ((selected--)) ;;
+      $'\x1b[B') (( selected < ${#visible_items[@]} - 1 )) && ((selected++)) ;;
+    esac
+  elif [[ $key == $'\x7f' ]]; then
+    search_string="${search_string::-1}"
+    filter_items
+    selected=0
+    offset=0
+  elif [[ "$key" =~ [a-zA-Z] ]]; then
+    search_string+="$key"
+    filter_items
+    selected=0
+    offset=0
+  elif [[ -z $key ]]; then
+    if [[ -z $search_string ]]; then
+      break
+	  echo "BBB"
+ 
+	fi
+    current="${visible_items[selected]}"
+    is_selected "$current" || selected_items+=("$current")
+  fi
+
+  (( selected < offset )) && offset=$selected
+  (( selected >= offset + max_visible )) && offset=$(( selected - max_visible + 1 ))
+done
+
+# Final result
+#{{{ >>>   temporary EXIT file >#89
+    # Temporary file to store the final directory
+    OUTPUT_FILE=$(mktemp)
+
+    # Trap to clean up on exit
+    cleanup() {
+        rm -f "$OUTPUT_FILE"
+        tput cnorm  # Restore cursor
+    }
+    trap cleanup EXIT
+    #}}} <#99
+echo
+echo ""
+clear
+for item in "${selected_items[@]}"; do
+ #echo "- $item"
+  # your-command "$item"
+echo -e $DDD
+ls
+echo -e $DDD
+  cd $item 
+
+done
+

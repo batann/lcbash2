@@ -1,237 +1,140 @@
-# lcbash2
+# `lcbash` – A Modular Bash Function and Utility Library
+
+## Overview
 
-<a id="lcbash2-top"></a>
+`lcbash` is a modular and scalable collection of Bash utilities, functions, and scripts. It is designed for ease of use, maintainability, and efficient function sourcing. The project is split into manageable components, ensuring that each function can be sourced dynamically, and each file has a clear purpose.
 
-<!-- PROJECT LOGO -->
-<br />
-<div align="center">
-  <a href="https://github.com/batann/lcbash2/images/logo.png">
-    <img src="images/logo.png" alt="Logo" width="512" height="512">
-  </a>
-
-<h3 align="center">LC-Linux</h3>
-
-  <p align="center">
-    Work in progress,
-    intended was a light-weight linux distribution based on AntiX-base-OS
-    but it seems to....
-    <br />
-    <a href="https://github.com/batann/lcbash2"><strong>Explore the docs »</strong></a>
-    <br />
-    <br />
-    <a href="https://github.com/batann/lcbash2">View Demo</a>
-    ·
-    <a href="https://github.com/batann/lcbash2/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
-    ·
-    <a href="https://github.com/batann/lcbash2/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
-  </p>
-</div>
-
-
-
-<!-- TABLE OF CONTENTS -->
-<details>
-  <summary>Table of Contents</summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
-    </li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
-  </ol>
-</details>
+## Project Structure
 
+The project is organized into several directories:
+
+- **`bashrc/`**:        Contains `.bashrc` files (located in the `files/` subdirectory). This is where you can experiment and develop custom shell configurations.
+- **`dotfiles/`**:      Backup or template files for other dotfiles like `.vimrc`, `.bash_profile`, and others.
+- **`misc/`**:          A collection of random scripts and utilities.
+- **`functions/`**:     Each file in this directory contains a single function, written in foldable chunks for easy sourcing.
+- **`README.md`**:      This file, providing documentation and system overview.
+
+## Folder Breakdown
+
+### `bashrc/`
+- **`files/`**:         This directory contains the development and experimental `.bashrc` files. It is meant to be used for creating custom aliases, functions, and other shell configurations.
 
+### `functions/`
+- This directory holds the core functions for the system. Functions are written in foldable sections for easy sourcing and modular use. Functions are added here by naming each script after the function it performs (e.g., `str_trim.sh` for the `str_trim` function).
 
-<!-- ABOUT THE PROJECT -->
-## About The Project
+---
 
-[![Product Name Screen Shot][product-screenshot]](https://example.com)
+## Project Imperatives
 
-Here's a blank template to get started: To avoid retyping too much info. Do a search and replace with your text editor for the following: `batann`, `lcbash2`, `twitter_handle`, `linkedin_username`, `email_client`, `email`, `project_title`, `project_description`
+### 'lc-code-folding'
+- Folds 
 
-<p align="right">(<a href="#lcbash2-top">back to top</a>)</p>
+Folds-Level-1: #{{{ >>>   TITLE [>#N (marker and script relative line number)]3232
+               #}}} [<#N (marker and script relative line number)]3333
 
+Folds-Level-2: #{{{ >>    TITLE [>#N (marker and script relative line number)]3535
+               #}}} [<#N (marker and script relative line number)]3636
 
+Folds-Level-3: #{{{ >     TITLE [>#N (marker and script relative line number)]3838
+               #}}} [<#N (marker and script relative line number)]3939
 
-### Built With
 
-* [![Next][Next.js]][Next-url]
-* [![React][React.js]][React-url]
-* [![Vue][Vue.js]][Vue-url]
-* [![Angular][Angular.io]][Angular-url]
-* [![Svelte][Svelte.dev]][Svelte-url]
-* [![Laravel][Laravel.com]][Laravel-url]
-* [![Bootstrap][Bootstrap.com]][Bootstrap-url]
-* [![JQuery][JQuery.com]][JQuery-url]
 
-<p align="right">(<a href="#lcbash2-top">back to top</a>)</p>
+    - markers with script relative line numbers indicate the position
+      of either Fold-beginning or Fold-ending within the current buffer and are
+      detected,added and/or edited according to current positionby vim autocommand
+      on :w execution.
 
+    - Folds Levels are from 1-3 are indicated by >>>
+      1 = >>>
+      2 = >>
+      3 = >
+      to maintain a consistent layout Space [ ] replaces each [>]
 
+  vim auto command`
+   autocmd BufWritePre * call UpdateFoldMarkersStart()
+function! UpdateFoldMarkersStart()
+    let l:save_cursor = getpos(".")
+    let l:lines = getline(1, '$')
+    for idx in range(len(l:lines))
+        let line = l:lines[idx]
+        if line =~ '#{{{' " Check for the first marker >#61
+            if line =~ '>\#\d\+' " If the second marker with a number exists, replace the number
+                let newline = substitute(line, '>\#\d\+', '>#' . (idx + 1), '')
+            elseif line =~ '>\#' " If the second marker exists but no number, add the line number
+                let newline = line . (idx + 1)
+            else " If the second marker doesn't exist, add it with the line number at the end
+                let newline = line . ' >#' . (idx + 1)
+            endif
+            call setline(idx + 1, newline)
+        endif
+    endfor
+    call setpos('.', l:save_cursor)
+endfunction
 
-<!-- GETTING STARTED -->
-## Getting Started
 
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
+    autocmd BufWritePre * call UpdateFoldMarkersEnd()
+function! UpdateFoldMarkersEnd()
+    let l:save_cursor = getpos(".")
+    let l:lines = getline(1, '$')
+    for idx in range(len(l:lines))
+        let line = l:lines[idx]
+        if line =~ '#}}}' " Check for the first marker >#10 <#82
+            if line =~ '<\#\d\+' " If the second marker with a number exists, replace the number
+                let newline = substitute(line, '<\#\d\+', '<#' . (idx + 1), '')
+            elseif line =~ '<\#' " If the second marker exists but no number, add the line number
+                let newline = line . (idx + 1)
+            else " If the second marker doesn't exist, add it with the line number at the end
+                let newline = line . ' <#' . (idx + 1)
+            endif
+            call setline(idx + 1, newline)
+        endif
+    endfor
+    call setpos('.', l:save_cursor)
+endfunction
+  `
 
-### Prerequisites
 
-This is an example of how to list things you need to use the software and how to install them.
-* npm
-  ```sh
-  npm install npm@latest -g
-  ```
+### ''
 
-### Installation
+### ''
 
-1. Get a free API Key at [https://example.com](https://example.com)
-2. Clone the repo
-   ```sh
-   git clone https://github.com/batann/lcbash2.git
-   ```
-3. Install NPM packages
-   ```sh
-   npm install
-   ```
-4. Enter your API in `config.js`
-   ```js
-   const API_KEY = 'ENTER YOUR API';
-   ```
-5. Change git remote url to avoid accidental pushes to base project
-   ```sh
-   git remote set-url origin batann/lcbash2
-   git remote -v # confirm the changes
-   ```
+---
 
-<p align="right">(<a href="#lcbash2-top">back to top</a>)</p>
+## How to Use
 
+1. **Adding Functions:**
+   - Functions are placed in the `functions/` directory. Each function should be contained within its own script file.
+   - Functions are written in foldable blocks (i.e., `#{{{` for the start of a fold and `#}}}` for the end). This allows functions to be sourced dynamically based on need. >#108 <#108
+   - Use the markers `>#` followed by the line number to specify where the fold begins for easier sourcing and navigation.
 
+2. **Source a Function:**
+   - To source a function, use:
+     ```bash
+     source /path/to/function/file.sh
+     ```
 
-<!-- USAGE EXAMPLES -->
-## Usage
+3. **Modify `.bashrc`:**
+   - You can experiment with your `.bashrc` files in the `bashrc/files/` directory. Remember that these files should contain your custom aliases, environment variables, and other Bash settings.
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+4. **Vim Auto-update:**
+   - Whenever you modify a function file in Vim, the line numbers marked with `>#` are updated automatically to reflect the real line position.
 
-_For more examples, please refer to the [Documentation](https://example.com)_
+---
 
-<p align="right">(<a href="#lcbash2-top">back to top</a>)</p>
+## Utilities
 
+### `lcbash/tools/`
+- **`fold_find.sh`**:          Find the start and end lines of a function fold.
+- **`fold_extract.sh`**:       Extract and source a function by name.
+- **`fold_validate.sh`**:      Validate that all folds are correctly matched with start and end markers.
 
+---
 
-<!-- ROADMAP -->
-## Roadmap
+## Development Notes
 
-- [ ] Feature 1
-- [ ] Feature 2
-- [ ] Feature 3
-    - [ ] Nested Feature
+- **Modularization**:         The project is designed with modularity in mind. Functions can be added and updated without interfering with other parts of the project.
+- **Easy Sourcing**:          With the fold system and the `>#` markers, sourcing functions is made simple and efficient.
 
-See the [open issues](https://github.com/batann/lcbash2/issues) for a full list of proposed features (and known issues).
-
-<p align="right">(<a href="#lcbash2-top">back to top</a>)</p>
-
-
-
-<!-- CONTRIBUTING -->
-## Contributing
-
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
-Don't forget to give the project a star! Thanks again!
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-<p align="right">(<a href="#lcbash2-top">back to top</a>)</p>
-
-### Top contributors:
-
-<a href="https://github.com/batann/lcbash2/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=batann/lcbash2" alt="contrib.rocks image" />
-</a>
-
-
-
-<!-- LICENSE -->
-## License
-
-Distributed under the MIT License. See `LICENSE.txt` for more information.
-
-<p align="right">(<a href="#lcbash2-top">back to top</a>)</p>
-
-
-
-<!-- CONTACT -->
-## Contact
-
-Your Name - [@twitter_handle](https://twitter.com/twitter_handle) - email@email_client.com
-
-Project Link: [https://github.com/batann/lcbash2](https://github.com/batann/lcbash2)
-
-<p align="right">(<a href="#lcbash2-top">back to top</a>)</p>
-
-
-
-<!-- ACKNOWLEDGMENTS -->
-## Acknowledgments
-
-* []()
-* []()
-* []()
-
-<p align="right">(<a href="#lcbash2-top">back to top</a>)</p>
-
-
-
-<!-- MARKDOWN LINKS & IMAGES -->
-<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/batann/lcbash2.svg?style=for-the-badge
-[contributors-url]: https://github.com/batann/lcbash2/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/batann/lcbash2.svg?style=for-the-badge
-[forks-url]: https://github.com/batann/lcbash2/network/members
-[stars-shield]: https://img.shields.io/github/stars/batann/lcbash2.svg?style=for-the-badge
-[stars-url]: https://github.com/batann/lcbash2/stargazers
-[issues-shield]: https://img.shields.io/github/issues/batann/lcbash2.svg?style=for-the-badge
-[issues-url]: https://github.com/batann/lcbash2/issues
-[license-shield]: https://img.shields.io/github/license/batann/lcbash2.svg?style=for-the-badge
-[license-url]: https://github.com/batann/lcbash2/blob/master/LICENSE.txt
-[linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
-[linkedin-url]: https://linkedin.com/in/linkedin_username
-[product-screenshot]: images/screenshot.png
-[Next.js]: https://img.shields.io/badge/next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white
-[Next-url]: https://nextjs.org/
-[React.js]: https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB
-[React-url]: https://reactjs.org/
-[Vue.js]: https://img.shields.io/badge/Vue.js-35495E?style=for-the-badge&logo=vuedotjs&logoColor=4FC08D
-[Vue-url]: https://vuejs.org/
-[Angular.io]: https://img.shields.io/badge/Angular-DD0031?style=for-the-badge&logo=angular&logoColor=white
-[Angular-url]: https://angular.io/
-[Svelte.dev]: https://img.shields.io/badge/Svelte-4A4A55?style=for-the-badge&logo=svelte&logoColor=FF3E00
-[Svelte-url]: https://svelte.dev/
-[Laravel.com]: https://img.shields.io/badge/Laravel-FF2D20?style=for-the-badge&logo=laravel&logoColor=white
-[Laravel-url]: https://laravel.com
-[Bootstrap.com]: https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white
-[Bootstrap-url]: https://getbootstrap.com
-[JQuery.com]: https://img.shields.io/badge/jQuery-0769AD?style=for-the-badge&logo=jquery&logoColor=white
-[JQuery-url]: https://jquery.com 
-
+---
 

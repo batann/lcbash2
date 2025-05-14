@@ -1,0 +1,25 @@
+# vim:fileencoding=utf-8:foldmethod=marker
+
+
+#{{{ >>>   browser_history_to_list >#4
+browser_history_to_list() {
+browser-history|sort -u|sed 's!.*http!http!g'|sed 's![,].*$!!g'>> /home/batan/.config/lists/firefox.list
+cat /home/batan/.config/lists/firefox.list|grep -vE "chess.com|duckduckgo "|sort -u >> /home/batan/firefox.list
+ rm /home/batan/.config/lists/firefox.list
+ mv /home/batan/firefox.list /home/batan/.config/lists/firefox.list
+}
+#}}} <#11
+#{{{ >>>   backup_bash_history >#12
+backup_bash_history() {
+cat /home/batan/.bash_history* >> /home/batan/.config/lists/commands.md
+cat /home/batan/.config/lists/commands.md|sort -u >> /home/batan/commands.md
+rm /home/batan/.config/lists/commands.md
+mv /home/batan/commands.md /home/batan/.config/lists/commands.md
+}
+#}}} <#19
+
+
+
+
+
+

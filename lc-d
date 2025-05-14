@@ -1,0 +1,9 @@
+#!/bin/bash
+
+read -p "URL1: >>>  " URL1 
+
+URL2=$(curl -sL -A "$USER_AGENT" $URL1|grep https|sed 's!.*https!https!g'|grep "m3u8"|rev|cut -c4-300|rev)
+URL3=$(curl -sL -A "$USER_AGENT" $URL2|grep hls|sort -u|head -n1)
+yt-dlp $(echo $URL2|sed 's!hls.m3u8!$(echo $URL3)!')
+
+
